@@ -1,0 +1,7 @@
+﻿[
+  {"id":"p1","title":"Cozy Knit Sweater","price":49.99,"tag":"New","images":["/img1.svg","/img2.svg","/img3.svg"]},
+  {"id":"p2","title":"Classic Denim Jeans","price":39.99,"tag":"Sale","images":["/img2.svg","/img3.svg","/img4.svg"]},
+  {"id":"p3","title":"Leather Ankle Boots","price":79.99,"tag":"Featured","images":["/img3.svg","/img4.svg","/img5.svg"]},
+  {"id":"p4","title":"Cotton T-Shirt","price":19.99,"tag":"Trending","images":["/img4.svg","/img1.svg"]},
+  {"id":"p5","title":"Wireless Noise-Canceling Headphones","price":199.99,"tag":"New","images":["/img5.svg","/img2.svg","/img1.svg"]}
+]
