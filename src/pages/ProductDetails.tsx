@@ -1,4 +1,5 @@
-﻿import { Link, useNavigate, useParams } from "react-router-dom";
+// src/pages/ProductDetails.tsx
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState, FormEvent } from "react";
 
 import ProductCarousel from "../components/ProductCarousel";
@@ -58,7 +59,7 @@ export default function ProductDetails() {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // produto
+  // buscar produto
   useEffect(() => {
     if (!id) return;
 
@@ -87,7 +88,7 @@ export default function ProductDetails() {
     fetchProduct();
   }, [id]);
 
-  // reviews
+  // buscar reviews
   useEffect(() => {
     if (!id) return;
 
@@ -199,7 +200,7 @@ export default function ProductDetails() {
     setPicked(null);
     setAskConfirm(false);
 
-    // vai pra lista pesada já explicando o que foi salvo
+    // vai para a wishlist pesada já dizendo o que foi salvo
     navigate("/wishlist", {
       state: {
         justAdded: {
@@ -221,6 +222,7 @@ export default function ProductDetails() {
 
   return (
     <div className="mx-auto max-w-6xl p-4 sm:p-6 space-y-6">
+      {/* voltar */}
       <div>
         <Link to="/" className="btn-secondary">
           ← Voltar
@@ -228,6 +230,7 @@ export default function ProductDetails() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* imagem / carrossel */}
         <div>
           <ProductCarousel
             images={images.length ? images : ["/img1.svg"]}
@@ -235,6 +238,7 @@ export default function ProductDetails() {
           />
         </div>
 
+        {/* lado direito */}
         <div className="space-y-4">
           <h1 className="text-3xl font-extrabold">{product.title}</h1>
           {product.price != null && (
@@ -274,7 +278,7 @@ export default function ProductDetails() {
         </div>
       </div>
 
-      {/* descrição com ler mais/menos */}
+      {/* DESCRIÇÃO LONGA */}
       <div className="card space-y-4">
         <h2 className="text-xl font-extrabold">Descrição</h2>
 
@@ -301,7 +305,7 @@ export default function ProductDetails() {
         </div>
       </div>
 
-      {/* benefícios */}
+      {/* BENEFÍCIOS */}
       <div className="card space-y-3">
         <h2 className="text-xl font-extrabold">Benefícios</h2>
         <ul className="list-disc pl-6 space-y-2 opacity-90 leading-7">
@@ -328,7 +332,7 @@ export default function ProductDetails() {
         </ul>
       </div>
 
-      {/* cuidados */}
+      {/* CUIDADOS */}
       <div className="card space-y-2">
         <h2 className="text-xl font-extrabold">Cuidados</h2>
         <p className="opacity-90 leading-7">
@@ -338,79 +342,135 @@ export default function ProductDetails() {
         </p>
       </div>
 
-      {/* reviews */}
+      {/* SEÇÃO REVIEWS (API) */}
       <div className="card space-y-4">
         <h2 className="text-xl font-extrabold">Avaliações</h2>
-
-        <form className="space-y-3" onSubmit={handleSubmitReview}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <input
-              className="input"
-              placeholder="Seu nome (opcional)"
-              value={reviewAuthor}
-              onChange={(e) => setReviewAuthor(e.target.value)}
-            />
-            <select
-              className="input"
-              value={reviewRating}
-              onChange={(e) => setReviewRating(Number(e.target.value))}
-            >
-              <option value={5}>5 estrelas</option>
-              <option value={4}>4 estrelas</option>
-              <option value={3}>3 estrelas</option>
-              <option value={2}>2 estrelas</option>
-              <option value={1}>1 estrela</option>
-            </select>
-          </div>
-          <textarea
-            className="input min-h-[80px]"
-            placeholder="Conte como foi sua experiência com o produto"
-            value={reviewText}
-            onChange={(e) => setReviewText(e.target.value)}
-            required
-          />
-          {submitError && (
-            <p className="text-xs text-red-500">{submitError}</p>
-          )}
-          <button
-            type="submit"
-            className="btn"
-            disabled={submittingReview || !reviewText.trim()}
-          >
-            {submittingReview ? "Enviando..." : "Enviar avaliação"}
-          </button>
-        </form>
 
         {loadingReviews ? (
           <p className="opacity-80 text-sm">Carregando avaliações...</p>
         ) : reviews.length === 0 ? (
-          <p className="opacity-80 text-sm">
-            Ainda não há avaliações para este produto.
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {reviews.map((r) => (
-              <div
-                key={r.id}
-                className="rounded-xl border border-white/10 bg-white/5 p-3 space-y-1 text-sm"
-              >
-                <div className="flex justify-between">
-                  <span className="font-semibold">{r.author}</span>
-                  <span className="opacity-60 text-xs">
-                    {r.createdAt?.slice(0, 10)}
-                  </span>
-                </div>
-                <div className="text-xs">
-                  {"★".repeat(r.rating)}
-                  {"☆".repeat(Math.max(0, 5 - r.rating))}
-                </div>
-                <p className="opacity-90">{r.text}</p>
+          <>
+            <p className="opacity-80 text-sm">
+              Ainda não há comentários. Seja o primeiro a deixar sua opinião:
+            </p>
+
+            {/* formulário quando ainda não há comentários */}
+            <form className="space-y-3" onSubmit={handleSubmitReview}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input
+                  className="input"
+                  placeholder="Seu nome (opcional)"
+                  value={reviewAuthor}
+                  onChange={(e) => setReviewAuthor(e.target.value)}
+                />
+                <select
+                  className="input"
+                  value={reviewRating}
+                  onChange={(e) =>
+                    setReviewRating(Number(e.target.value))
+                  }
+                >
+                  <option value={5}>5 estrelas</option>
+                  <option value={4}>4 estrelas</option>
+                  <option value={3}>3 estrelas</option>
+                  <option value={2}>2 estrelas</option>
+                  <option value={1}>1 estrela</option>
+                </select>
               </div>
-            ))}
-          </div>
+              <textarea
+                className="input min-h-[80px]"
+                placeholder="Conte como foi sua experiência com o produto"
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value)}
+                required
+              />
+              {submitError && (
+                <p className="text-xs text-red-500">{submitError}</p>
+              )}
+              <button
+                type="submit"
+                className="btn"
+                disabled={submittingReview || !reviewText.trim()}
+              >
+                {submittingReview ? "Enviando..." : "Enviar comentário"}
+              </button>
+            </form>
+          </>
+        ) : (
+          <>
+            {/* lista de comentários */}
+            <div className="space-y-3">
+              {reviews.map((r) => (
+                <div
+                  key={r.id}
+                  className="rounded-xl border border-white/10 bg-white/5 p-3 space-y-1 text-sm"
+                >
+                  <div className="flex justify-between">
+                    <span className="font-semibold">{r.author}</span>
+                    <span className="opacity-60 text-xs">
+                      {r.createdAt?.slice(0, 10)}
+                    </span>
+                  </div>
+                  <div className="text-xs">
+                    {"★".repeat(r.rating)}
+                    {"☆".repeat(Math.max(0, 5 - r.rating))}
+                  </div>
+                  <p className="opacity-90">{r.text}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* formulário quando já existem comentários */}
+            <div className="pt-4 border-t border-white/10 space-y-3">
+              <p className="opacity-80 text-sm">
+                Deixe também o seu comentário:
+              </p>
+              <form className="space-y-3" onSubmit={handleSubmitReview}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <input
+                    className="input"
+                    placeholder="Seu nome (opcional)"
+                    value={reviewAuthor}
+                    onChange={(e) => setReviewAuthor(e.target.value)}
+                  />
+                  <select
+                    className="input"
+                    value={reviewRating}
+                    onChange={(e) =>
+                      setReviewRating(Number(e.target.value))
+                    }
+                  >
+                    <option value={5}>5 estrelas</option>
+                    <option value={4}>4 estrelas</option>
+                    <option value={3}>3 estrelas</option>
+                    <option value={2}>2 estrelas</option>
+                    <option value={1}>1 estrela</option>
+                  </select>
+                </div>
+                <textarea
+                  className="input min-h-[80px]"
+                  placeholder="Conte como foi sua experiência com o produto"
+                  value={reviewText}
+                  onChange={(e) => setReviewText(e.target.value)}
+                  required
+                />
+                {submitError && (
+                  <p className="text-xs text-red-500">{submitError}</p>
+                )}
+                <button
+                  type="submit"
+                  className="btn"
+                  disabled={submittingReview || !reviewText.trim()}
+                >
+                  {submittingReview ? "Enviando..." : "Enviar comentário"}
+                </button>
+              </form>
+            </div>
+          </>
         )}
       </div>
 
+      {/* modais */}
       <ColorModal
         open={openColor}
         onClose={() => setOpenColor(false)}
