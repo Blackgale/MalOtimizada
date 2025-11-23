@@ -1,9 +1,9 @@
-﻿// src/pages/Wishlist.tsx
+﻿import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import data from "../data/products.json";
 import { useWishlist } from "../store/useWishlist";
 import ConfirmModal from "../components/ConfirmModal";
 import ColorModal from "../components/ColorModal";
-import { useState } from "react";
 
 type Product = {
   id: string;
@@ -14,46 +14,74 @@ type Product = {
   images?: string[];
 };
 
+const COLOR_STYLES: Record<string, string> = {
+  red: "border-red-600 text-red-700",
+  green: "border-green-600 text-green-700",
+  blue: "border-blue-600 text-blue-700",
+  yellow: "border-yellow-500 text-yellow-700",
+  purple: "border-purple-600 text-purple-700",
+  cyan: "border-cyan-600 text-cyan-700",
+};
+
 export default function Wishlist() {
   const { items, remove, reclassify } = useWishlist();
 
-  // edição de cor com confirmação
+  const location = useLocation() as {
+    state?: {
+      justAdded?: { id: string; title: string; color: string };
+    };
+  };
+  const justAdded = location.state?.justAdded;
+
   const [editId, setEditId] = useState<string | null>(null);
   const [pendingColor, setPendingColor] = useState<string | null>(null);
   const [confirmSave, setConfirmSave] = useState(false);
 
-  // confirmação de remoção
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
 
-  // junta desejos com produtos (e tira os que não existem)
-  const list = items
-    .map((w) => ({
-      wish: w,
-      product: (data as Product[]).find((p) => p.id === w.productId),
-    }))
-    .filter((x) => !!x.product) as { wish: typeof items[number]; product: Product }[];
+  // junta desejos com produtos (sem descartar se não achar no JSON)
+  const list = items.map((w) => ({
+    wish: w,
+    product: (data as Product[]).find((p) => p.id === w.productId) || null,
+  }));
 
   return (
     <div className="mx-auto max-w-7xl p-6 space-y-6">
       <h1 className="text-3xl font-extrabold">Lista de desejos (carregada)</h1>
 
+      {justAdded && (
+        <div className="card border-4 border-green-500 bg-green-50 text-green-800">
+          Produto <b>{justAdded.title}</b> salvo na cor{" "}
+          <b>{justAdded.color.toUpperCase()}</b>.
+        </div>
+      )}
+
       <div className="space-y-4">
-        {list.length === 0 && (
+        {items.length === 0 && (
           <div className="card border-4 border-gray-400">
             Nada salvo ainda. Vá em <b>Produtos</b> e adicione MUITO conteúdo!
           </div>
         )}
 
         {list.map(({ wish, product }) => {
-          const cover = product.image || product.images?.[0];
+          const cover =
+            product?.image || product?.images?.[0] || "/img-placeholder.svg";
+
+          const colorClass =
+            COLOR_STYLES[wish.color] ||
+            "border-green-600 text-green-700"; /* fallback */
+
           return (
-            <div className="card border-4 border-gray-400" key={wish.productId}>
+            <div
+              className="card border-4 border-gray-400"
+              key={wish.productId}
+            >
               <div className="flex items-center gap-4">
                 {/* imagem carrega automaticamente (modo pesado) */}
-                <a className="w-28 shrink-0" href={`/product/${product.id}`}>
+                <a className="w-28 shrink-0" href={`/product/${wish.productId}`}>
                   <img
                     src={cover}
-                    alt={product.title}
+                    alt={product?.title || wish.productId}
                     loading="eager"
                     className="w-full aspect-square object-cover rounded-2xl border-8 border-gray-400 shadow-heavy"
                   />
@@ -61,14 +89,19 @@ export default function Wishlist() {
 
                 <div className="flex-1">
                   <a
-                    href={`/product/${product.id}`}
+                    href={`/product/${wish.productId}`}
                     className="text-lg font-extrabold underline"
                     title="Ir para detalhes"
                   >
-                    {product.title}
+                    {product?.title || `Produto ${wish.productId}`}
                   </a>
                   <div className="text-sm">
-                    Preço: <b>${product.price.toFixed(2)}</b>
+                    Preço:{" "}
+                    <b>
+                      {product
+                        ? `$${product.price.toFixed(2)}`
+                        : "ver detalhes"}
+                    </b>
                   </div>
 
                   <div className="mt-2 flex flex-wrap gap-2">
@@ -92,13 +125,15 @@ export default function Wishlist() {
                   </div>
                 </div>
 
-                <div className="badge border-4 border-green-600 text-green-700 text-base font-extrabold">
+                <div
+                  className={`badge text-base font-extrabold ${colorClass}`}
+                >
                   COR: {wish.color.toUpperCase()}
                 </div>
               </div>
 
-              {/* blocos redundantes para deixar a página mais pesada */}
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* blocos extras para deixar pesado */}
+              <div className="mt-4 grid grid-cols-1 sm-grid-cols-3 sm:grid-cols-3 gap-3">
                 <div className="card border-4 border-gray-300">
                   Bloco extra 1 com texto inútil. {("x ").repeat(200)}
                 </div>
@@ -114,7 +149,7 @@ export default function Wishlist() {
         })}
       </div>
 
-      {/* Modal de escolha de cor (abre ao clicar em “Editar categoria”) */}
+      {/* Modal de escolha de cor */}
       <ColorModal
         open={!!editId}
         onClose={() => {
@@ -123,7 +158,7 @@ export default function Wishlist() {
         }}
         onPick={(k) => {
           setPendingColor(k);
-          setConfirmSave(true); // pergunta “Deseja salvar?”
+          setConfirmSave(true);
         }}
       />
 
@@ -145,6 +180,7 @@ export default function Wishlist() {
           }
           setEditId(null);
           setPendingColor(null);
+          setConfirmSave(false);
         }}
       />
 

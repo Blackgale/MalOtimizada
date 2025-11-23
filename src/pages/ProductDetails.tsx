@@ -1,6 +1,5 @@
-﻿// src/pages/ProductDetails.tsx
-import { Link, useParams } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+﻿import { Link, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState, FormEvent } from "react";
 
 import ProductCarousel from "../components/ProductCarousel";
 import ColorModal from "../components/ColorModal";
@@ -37,6 +36,7 @@ type ApiReview = {
 
 export default function ProductDetails() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,14 +45,20 @@ export default function ProductDetails() {
   const [reviews, setReviews] = useState<ApiReview[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(true);
 
-  const { add } = useWishlist();
+  const { items, add, remove } = useWishlist();
 
   const [openColor, setOpenColor] = useState(false);
   const [askConfirm, setAskConfirm] = useState(false);
   const [picked, setPicked] = useState<string | null>(null);
   const [showAllDesc, setShowAllDesc] = useState(false);
 
-  // buscar produto na API
+  const [reviewAuthor, setReviewAuthor] = useState("");
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewText, setReviewText] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // produto
   useEffect(() => {
     if (!id) return;
 
@@ -81,7 +87,7 @@ export default function ProductDetails() {
     fetchProduct();
   }, [id]);
 
-  // buscar reviews na API
+  // reviews
   useEffect(() => {
     if (!id) return;
 
@@ -89,7 +95,6 @@ export default function ProductDetails() {
       try {
         const res = await fetch(`/api/products/${id}/reviews`);
         if (!res.ok) {
-          // se a rota ainda não existir, só não quebra a página
           setReviews([]);
           return;
         }
@@ -106,6 +111,40 @@ export default function ProductDetails() {
     fetchReviews();
   }, [id]);
 
+  async function handleSubmitReview(e: FormEvent) {
+    e.preventDefault();
+    if (!id) return;
+
+    setSubmittingReview(true);
+    setSubmitError(null);
+
+    try {
+      const res = await fetch(`/api/products/${id}/reviews`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          author: reviewAuthor || "Cliente",
+          rating: reviewRating,
+          text: reviewText,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Falha ao enviar avaliação");
+
+      const created: ApiReview = await res.json();
+      setReviews((prev) => [created, ...prev]);
+
+      setReviewAuthor("");
+      setReviewRating(5);
+      setReviewText("");
+    } catch (err: any) {
+      console.error(err);
+      setSubmitError(err.message ?? "Erro ao enviar avaliação");
+    } finally {
+      setSubmittingReview(false);
+    }
+  }
+
   const images = useMemo(
     () =>
       product?.images && product.images.length
@@ -117,7 +156,7 @@ export default function ProductDetails() {
   );
 
   const longDescription = useMemo(() => {
-    if (!product) return [""];
+    if (!product) return ["", "", "", ""];
     return [
       `O ${product.title} foi criado para entregar conforto imediato e um visual versátil que funciona tanto em rotinas aceleradas quanto em momentos de descanso. A construção prioriza toque suave e durabilidade, mantendo um caimento que abraça o corpo sem apertar. A proposta é ser aquele item que você veste sem pensar, porque combina com quase tudo e te acompanha o dia inteiro.`,
       `Nos detalhes, o ${product.title} recebe acabamentos pensados para uso intenso: costuras reforçadas, materiais que resistem a lavagens frequentes e uma estrutura que não perde a forma. O resultado é um equilíbrio entre praticidade e estética — fácil de combinar, agradável de usar e com aparência sempre presenteável.`,
@@ -140,6 +179,9 @@ export default function ProductDetails() {
     );
   }
 
+  const savedItem = items.find((i) => i.productId === product.id);
+  const isSaved = !!savedItem;
+
   const onPickColor = (c: string) => {
     setPicked(c);
     setOpenColor(false);
@@ -147,17 +189,38 @@ export default function ProductDetails() {
   };
 
   const confirmAdd = () => {
+    const color = picked || "red";
+
     add({
       productId: product.id,
-      color: picked || "red",
+      color,
       addedAt: Date.now(),
     });
     setPicked(null);
+    setAskConfirm(false);
+
+    // vai pra lista pesada já explicando o que foi salvo
+    navigate("/wishlist", {
+      state: {
+        justAdded: {
+          id: product.id,
+          title: product.title,
+          color,
+        },
+      },
+    });
+  };
+
+  const handleWishlistClick = () => {
+    if (isSaved) {
+      remove(product.id);
+    } else {
+      setOpenColor(true);
+    }
   };
 
   return (
     <div className="mx-auto max-w-6xl p-4 sm:p-6 space-y-6">
-      {/* voltar */}
       <div>
         <Link to="/" className="btn-secondary">
           ← Voltar
@@ -165,7 +228,6 @@ export default function ProductDetails() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* imagem grande / carrossel com bordas */}
         <div>
           <ProductCarousel
             images={images.length ? images : ["/img1.svg"]}
@@ -173,7 +235,6 @@ export default function ProductDetails() {
           />
         </div>
 
-        {/* lado direito: título, preço, chips e CTA */}
         <div className="space-y-4">
           <h1 className="text-3xl font-extrabold">{product.title}</h1>
           {product.price != null && (
@@ -182,7 +243,6 @@ export default function ProductDetails() {
             </div>
           )}
 
-          {/* chips “especificações” só para compor a UI pesada */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="rounded-xl px-4 py-3 border-2 border-white/10 bg-white/5 dark:bg-white/5">
               Conectividade: Bluetooth 5.0
@@ -198,37 +258,35 @@ export default function ProductDetails() {
             </div>
           </div>
 
-          <button className="btn" onClick={() => setOpenColor(true)}>
-            Salvar na lista de desejos
+          <button
+            className={isSaved ? "btn-secondary" : "btn"}
+            onClick={handleWishlistClick}
+          >
+            {isSaved
+              ? "Remover da lista de desejos"
+              : "Salvar na lista de desejos"}
           </button>
+          {isSaved && (
+            <p className="text-xs opacity-70">
+              Produto salvo na sua lista de desejos.
+            </p>
+          )}
         </div>
       </div>
 
-      {/* DESCRIÇÃO LONGA (com “ver mais”) */}
+      {/* descrição com ler mais/menos */}
       <div className="card space-y-4">
         <h2 className="text-xl font-extrabold">Descrição</h2>
+
         <p className="leading-7 opacity-90">{longDescription[0]}</p>
-        <p
-          className={`leading-7 opacity-90 ${
-            showAllDesc ? "" : "hidden sm:block line-clamp-5"
-          }`}
-        >
-          {longDescription[1]}
-        </p>
-        <p
-          className={`leading-7 opacity-90 ${
-            showAllDesc ? "" : "hidden sm:block line-clamp-5"
-          }`}
-        >
-          {longDescription[2]}
-        </p>
-        <p
-          className={`leading-7 opacity-90 ${
-            showAllDesc ? "" : "hidden sm:block line-clamp-5"
-          }`}
-        >
-          {longDescription[3]}
-        </p>
+
+        {showAllDesc && (
+          <>
+            <p className="leading-7 opacity-90">{longDescription[1]}</p>
+            <p className="leading-7 opacity-90">{longDescription[2]}</p>
+            <p className="leading-7 opacity-90">{longDescription[3]}</p>
+          </>
+        )}
 
         <div className="flex gap-2">
           <button
@@ -243,7 +301,7 @@ export default function ProductDetails() {
         </div>
       </div>
 
-      {/* SEÇÃO BENEFÍCIOS */}
+      {/* benefícios */}
       <div className="card space-y-3">
         <h2 className="text-xl font-extrabold">Benefícios</h2>
         <ul className="list-disc pl-6 space-y-2 opacity-90 leading-7">
@@ -270,7 +328,7 @@ export default function ProductDetails() {
         </ul>
       </div>
 
-      {/* SEÇÃO CUIDADOS */}
+      {/* cuidados */}
       <div className="card space-y-2">
         <h2 className="text-xl font-extrabold">Cuidados</h2>
         <p className="opacity-90 leading-7">
@@ -280,9 +338,49 @@ export default function ProductDetails() {
         </p>
       </div>
 
-      {/* SEÇÃO REVIEWS (API) */}
-      <div className="card space-y-3">
+      {/* reviews */}
+      <div className="card space-y-4">
         <h2 className="text-xl font-extrabold">Avaliações</h2>
+
+        <form className="space-y-3" onSubmit={handleSubmitReview}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input
+              className="input"
+              placeholder="Seu nome (opcional)"
+              value={reviewAuthor}
+              onChange={(e) => setReviewAuthor(e.target.value)}
+            />
+            <select
+              className="input"
+              value={reviewRating}
+              onChange={(e) => setReviewRating(Number(e.target.value))}
+            >
+              <option value={5}>5 estrelas</option>
+              <option value={4}>4 estrelas</option>
+              <option value={3}>3 estrelas</option>
+              <option value={2}>2 estrelas</option>
+              <option value={1}>1 estrela</option>
+            </select>
+          </div>
+          <textarea
+            className="input min-h-[80px]"
+            placeholder="Conte como foi sua experiência com o produto"
+            value={reviewText}
+            onChange={(e) => setReviewText(e.target.value)}
+            required
+          />
+          {submitError && (
+            <p className="text-xs text-red-500">{submitError}</p>
+          )}
+          <button
+            type="submit"
+            className="btn"
+            disabled={submittingReview || !reviewText.trim()}
+          >
+            {submittingReview ? "Enviando..." : "Enviar avaliação"}
+          </button>
+        </form>
+
         {loadingReviews ? (
           <p className="opacity-80 text-sm">Carregando avaliações...</p>
         ) : reviews.length === 0 ? (
@@ -313,7 +411,6 @@ export default function ProductDetails() {
         )}
       </div>
 
-      {/* modais */}
       <ColorModal
         open={openColor}
         onClose={() => setOpenColor(false)}
