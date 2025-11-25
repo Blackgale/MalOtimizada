@@ -35,6 +35,25 @@ type ApiReview = {
   replies?: number;
 };
 
+// mesmas cores usadas nas listas
+const COLOR_LABELS: Record<string, string> = {
+  red: "Lista vermelha",
+  green: "Lista verde",
+  blue: "Lista azul",
+  yellow: "Lista amarela",
+  purple: "Lista roxa",
+  cyan: "Lista ciano",
+};
+
+const COLOR_BADGE_CLASSES: Record<string, string> = {
+  red: "border-red-600 text-red-700",
+  green: "border-green-600 text-green-700",
+  blue: "border-blue-600 text-blue-700",
+  yellow: "border-yellow-500 text-yellow-700",
+  purple: "border-purple-600 text-purple-700",
+  cyan: "border-cyan-600 text-cyan-700",
+};
+
 export default function ProductDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -88,7 +107,7 @@ export default function ProductDetails() {
     fetchProduct();
   }, [id]);
 
-  // buscar reviews
+  // buscar reviews (se existir API, senão fica [])
   useEffect(() => {
     if (!id) return;
 
@@ -112,6 +131,7 @@ export default function ProductDetails() {
     fetchReviews();
   }, [id]);
 
+  // enviar avaliação (com fallback local)
   async function handleSubmitReview(e: FormEvent) {
     e.preventDefault();
     if (!id) return;
@@ -119,28 +139,50 @@ export default function ProductDetails() {
     setSubmittingReview(true);
     setSubmitError(null);
 
+    const localReview: ApiReview = {
+      id: String(Date.now()),
+      author: reviewAuthor || "Cliente",
+      rating: reviewRating,
+      text: reviewText,
+      createdAt: new Date().toISOString(),
+    };
+
     try {
-      const res = await fetch(`/api/products/${id}/reviews`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          author: reviewAuthor || "Cliente",
-          rating: reviewRating,
-          text: reviewText,
-        }),
-      });
+      let created: ApiReview | null = null;
 
-      if (!res.ok) throw new Error("Falha ao enviar avaliação");
+      try {
+        const res = await fetch(`/api/products/${id}/reviews`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            author: localReview.author,
+            rating: localReview.rating,
+            text: localReview.text,
+          }),
+        });
 
-      const created: ApiReview = await res.json();
-      setReviews((prev) => [created, ...prev]);
+        if (res.ok) {
+          created = await res.json();
+        } else {
+          console.warn("API de reviews não respondeu OK, usando fallback local");
+        }
+      } catch (err) {
+        console.warn(
+          "Falha na chamada da API de reviews, usando fallback local",
+          err
+        );
+      }
+
+      const finalReview = created ?? localReview;
+
+      setReviews((prev) => [finalReview, ...prev]);
 
       setReviewAuthor("");
       setReviewRating(5);
       setReviewText("");
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setSubmitError(err.message ?? "Erro ao enviar avaliação");
+      setSubmitError("Não foi possível salvar seu comentário.");
     } finally {
       setSubmittingReview(false);
     }
@@ -180,8 +222,12 @@ export default function ProductDetails() {
     );
   }
 
-  const savedItem = items.find((i) => i.productId === product.id);
-  const isSaved = !!savedItem;
+  // pode ter mais de uma entrada para o mesmo produto em listas diferentes
+  const savedEntries = items.filter((i) => i.productId === product.id);
+  const isSaved = savedEntries.length > 0;
+  const savedColors = Array.from(
+    new Set(savedEntries.map((i) => i.color))
+  );
 
   const onPickColor = (c: string) => {
     setPicked(c);
@@ -200,7 +246,6 @@ export default function ProductDetails() {
     setPicked(null);
     setAskConfirm(false);
 
-    // vai para a wishlist pesada já dizendo o que foi salvo
     navigate("/wishlist", {
       state: {
         justAdded: {
@@ -214,6 +259,7 @@ export default function ProductDetails() {
 
   const handleWishlistClick = () => {
     if (isSaved) {
+      // remove todas as entradas desse produto (todas as listas)
       remove(product.id);
     } else {
       setOpenColor(true);
@@ -270,10 +316,21 @@ export default function ProductDetails() {
               ? "Remover da lista de desejos"
               : "Salvar na lista de desejos"}
           </button>
+
           {isSaved && (
-            <p className="text-xs opacity-70">
-              Produto salvo na sua lista de desejos.
-            </p>
+            <div className="mt-2 space-y-1 text-xs">
+              <p className="opacity-70">Produto salvo nas listas:</p>
+              <div className="flex flex-wrap gap-2">
+                {savedColors.map((color) => (
+                  <span
+                    key={color}
+                    className={`badge ${COLOR_BADGE_CLASSES[color] ?? "border-gray-400 text-gray-700"}`}
+                  >
+                    {COLOR_LABELS[color] ?? `Lista ${color}`}
+                  </span>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       </div>
@@ -342,7 +399,7 @@ export default function ProductDetails() {
         </p>
       </div>
 
-      {/* SEÇÃO REVIEWS (API) */}
+      {/* SEÇÃO REVIEWS (API + formulário) */}
       <div className="card space-y-4">
         <h2 className="text-xl font-extrabold">Avaliações</h2>
 
@@ -354,7 +411,6 @@ export default function ProductDetails() {
               Ainda não há comentários. Seja o primeiro a deixar sua opinião:
             </p>
 
-            {/* formulário quando ainda não há comentários */}
             <form className="space-y-3" onSubmit={handleSubmitReview}>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input
@@ -398,7 +454,6 @@ export default function ProductDetails() {
           </>
         ) : (
           <>
-            {/* lista de comentários */}
             <div className="space-y-3">
               {reviews.map((r) => (
                 <div
@@ -420,7 +475,6 @@ export default function ProductDetails() {
               ))}
             </div>
 
-            {/* formulário quando já existem comentários */}
             <div className="pt-4 border-t border-white/10 space-y-3">
               <p className="opacity-80 text-sm">
                 Deixe também o seu comentário:
