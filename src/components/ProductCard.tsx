@@ -1,5 +1,6 @@
-﻿import { Link } from "react-router-dom";
-import { useState } from "react";
+// src/components/ProductCard.tsx
+import { Link, useNavigate } from "react-router-dom";
+import { MouseEvent, useState } from "react";
 import ColorModal from "./ColorModal";
 import ConfirmModal from "./ConfirmModal";
 import { useWishlist } from "../store/useWishlist";
@@ -12,13 +13,69 @@ function descricaoCurta(title: string) {
   return limit(base, 100);
 }
 
+// mesmas cores usadas no restante da app
+const COLOR_BADGE_CLASSES: Record<string, string> = {
+  red: "border-red-600 text-red-700",
+  green: "border-green-600 text-green-700",
+  blue: "border-blue-600 text-blue-700",
+  yellow: "border-yellow-500 text-yellow-700",
+  purple: "border-purple-600 text-purple-700",
+  cyan: "border-cyan-600 text-cyan-700",
+};
+
 export default function ProductCard({ p }: { p: any }) {
+  const navigate = useNavigate();
   const { items, add, remove } = useWishlist();
+
   const saved = items.find((i) => i.productId === p.id);
-  const [open, setOpen] = useState(false);
+
+  const [open, setOpen] = useState(false); // escolher cor
   const [confirmRemove, setConfirmRemove] = useState(false);
+  const [pickedColor, setPickedColor] = useState<string | null>(null);
+  const [confirmAdd, setConfirmAdd] = useState(false); // confirmar adição
 
   const cover = p.images?.[0] || p.image;
+
+  const handleAddClick = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setOpen(true);
+  };
+
+  const handleRemoveClick = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setConfirmRemove(true);
+  };
+
+  const handleConfirmAdd = () => {
+    const color = pickedColor || "red";
+
+    add({
+      productId: p.id,
+      color,
+      addedAt: Date.now(),
+    });
+
+    setPickedColor(null);
+    setConfirmAdd(false);
+
+    // vai para a lista de desejos pesada mostrando o que foi salvo
+    navigate("/wishlist", {
+      state: {
+        justAdded: {
+          id: p.id,
+          title: p.title,
+          color,
+        },
+      },
+    });
+  };
+
+  const badgeClass =
+    saved && COLOR_BADGE_CLASSES[saved.color]
+      ? COLOR_BADGE_CLASSES[saved.color]
+      : "border-green-600 text-green-700";
 
   return (
     <div className="card space-y-3">
@@ -46,7 +103,9 @@ export default function ProductCard({ p }: { p: any }) {
             {p.tag && <span className="badge">Tag: {p.tag}</span>}
           </div>
 
-          <div className="text-sm mt-1">Preço <b>${p.price.toFixed(2)}</b></div>
+          <div className="text-sm mt-1">
+            Preço <b>${p.price.toFixed(2)}</b>
+          </div>
 
           {/* DESCRIÇÃO <= 100 caracteres */}
           <p className="text-sm mt-2">{descricaoCurta(p.title)}</p>
@@ -54,7 +113,11 @@ export default function ProductCard({ p }: { p: any }) {
           <div className="mt-3 flex flex-wrap gap-2">
             {!saved ? (
               <>
-                <button className="btn" onClick={() => setOpen(true)}>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={handleAddClick}
+                >
                   Adicionar à lista (com confirmação)
                 </button>
                 <Link to={`/product/${p.id}`} className="btn-secondary">
@@ -63,12 +126,15 @@ export default function ProductCard({ p }: { p: any }) {
               </>
             ) : (
               <>
-                <div className="badge border-4 border-green-600 text-green-700 text-base font-extrabold">
+                <div
+                  className={`badge border-4 text-base font-extrabold ${badgeClass}`}
+                >
                   SALVO NA COR {saved.color.toUpperCase()}
                 </div>
                 <button
+                  type="button"
                   className="btn-secondary"
-                  onClick={() => setConfirmRemove(true)}
+                  onClick={handleRemoveClick}
                 >
                   Remover (confirmar)
                 </button>
@@ -81,12 +147,31 @@ export default function ProductCard({ p }: { p: any }) {
         </div>
       </div>
 
-      {/* modais */}
+      {/* modal de escolha de cor */}
       <ColorModal
         open={open}
         onClose={() => setOpen(false)}
-        onPick={(k) => add({ productId: p.id, color: k, addedAt: Date.now() })}
+        onPick={(k) => {
+          setPickedColor(k);
+          setOpen(false);
+          setConfirmAdd(true);
+        }}
       />
+
+      {/* confirmação para adicionar na wishlist */}
+      <ConfirmModal
+        open={confirmAdd}
+        onClose={() => setConfirmAdd(false)}
+        title="Confirmar adição"
+        desc={`Deseja adicionar na lista na cor ${
+          pickedColor || "vermelha"
+        }?`}
+        confirmText="Sim, adicionar"
+        cancelText="Cancelar"
+        onConfirm={handleConfirmAdd}
+      />
+
+      {/* confirmação para remover da wishlist */}
       <ConfirmModal
         open={confirmRemove}
         onClose={() => setConfirmRemove(false)}
