@@ -1,4 +1,4 @@
-﻿import { Route, Routes, Navigate, Link } from "react-router-dom";
+import { Route, Routes, Navigate, Link } from "react-router-dom";
 import TopBar from "./components/TopBar";
 import Products from "./pages/Products";
 import Wishlist from "./pages/Wishlist";
@@ -11,8 +11,7 @@ function DebugStrip() {
   const { token, user } = useAuth();
   return (
     <div style={{ padding: 8, background: "#eef6ff", borderBottom: "1px solid #bcd" }}>
-      <b>debug:</b> app montou |
-      token: <code>{token ? "SIM" : "NÃO"}</code> |
+      
       user: <code>{user?.email || "-"}</code> |
       <Link to="/signin" style={{ marginLeft: 8, textDecoration: "underline" }}>/signin</Link> |
       <Link to="/" style={{ marginLeft: 8, textDecoration: "underline" }}>/</Link>
