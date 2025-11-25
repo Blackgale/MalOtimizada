@@ -45,7 +45,7 @@ export default function ProductCard({ p }: { p: any }) {
   const handleRemoveClick = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    setConfirmRemove(true);
+    remove(p.id);  // Remover o item sem redirecionar
   };
 
   const handleConfirmAdd = () => {
@@ -59,17 +59,6 @@ export default function ProductCard({ p }: { p: any }) {
 
     setPickedColor(null);
     setConfirmAdd(false);
-
-    // vai para a lista de desejos pesada mostrando o que foi salvo
-    navigate("/wishlist", {
-      state: {
-        justAdded: {
-          id: p.id,
-          title: p.title,
-          color,
-        },
-      },
-    });
   };
 
   const badgeClass =
@@ -136,7 +125,7 @@ export default function ProductCard({ p }: { p: any }) {
                   className="btn-secondary"
                   onClick={handleRemoveClick}
                 >
-                  Remover (confirmar)
+                  Remover da lista de desejos
                 </button>
                 <Link to={`/product/${p.id}`} className="btn-secondary">
                   Ver detalhes
@@ -179,7 +168,7 @@ export default function ProductCard({ p }: { p: any }) {
         desc="Tem certeza que deseja remover este item da sua lista de desejos?"
         confirmText="Sim, remover"
         cancelText="Cancelar"
-        onConfirm={() => remove(p.id)}
+        onConfirm={handleRemoveClick}
       />
     </div>
   );
