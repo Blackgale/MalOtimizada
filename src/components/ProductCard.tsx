@@ -45,7 +45,7 @@ export default function ProductCard({ p }: { p: any }) {
   const handleRemoveClick = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    remove(p.id);  // Remover o item sem redirecionar
+    setConfirmRemove(true);
   };
 
   const handleConfirmAdd = () => {
@@ -59,6 +59,12 @@ export default function ProductCard({ p }: { p: any }) {
 
     setPickedColor(null);
     setConfirmAdd(false);
+  };
+
+  // Alteração: função para remover diretamente no ConfirmModal
+  const handleConfirmRemove = () => {
+    remove(p.id); // Remover produto
+    setConfirmRemove(false); // Fecha o modal
   };
 
   const badgeClass =
@@ -168,7 +174,7 @@ export default function ProductCard({ p }: { p: any }) {
         desc="Tem certeza que deseja remover este item da sua lista de desejos?"
         confirmText="Sim, remover"
         cancelText="Cancelar"
-        onConfirm={handleRemoveClick}
+        onConfirm={handleConfirmRemove}  
       />
     </div>
   );
