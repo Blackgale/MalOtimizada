@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import data from "../data/products.json";
 import { useWishlist } from "../store/useWishlist";
@@ -133,15 +133,21 @@ export default function Wishlist() {
               </div>
 
               {/* blocos extras para deixar pesado */}
-              <div className="mt-4 grid grid-cols-1 sm-grid-cols-3 sm:grid-cols-3 gap-3">
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="card border-4 border-gray-300">
-                  Bloco extra 1 com texto inútil. {("x ").repeat(200)}
+                  Bloco extra 1 com texto inútil. Lorem ipsum dolor sit amet,
+                  consectetur adipiscing elit. Phasellus vitae mauris ac felis
+                  aliquam auctor.
                 </div>
                 <div className="card border-4 border-gray-300">
-                  Bloco extra 2 com texto inútil. {("x ").repeat(200)}
+                  Bloco extra 2 com texto inútil. Lorem ipsum dolor sit amet,
+                  consectetur adipiscing elit. Integer eget velit nec lorem
+                  porttitor tincidunt.
                 </div>
                 <div className="card border-4 border-gray-300">
-                  Bloco extra 3 com texto inútil. {("x ").repeat(200)}
+                  Bloco extra 3 com texto inútil. Lorem ipsum dolor sit amet,
+                  consectetur adipiscing elit. Curabitur ut augue sed turpis
+                  feugiat faucibus.
                 </div>
               </div>
             </div>
