@@ -1,4 +1,4 @@
-﻿import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../store/useAuth";
 import { preloadAllAssets } from "../utils/preload";
 
@@ -10,12 +10,7 @@ export default function TopBar(){
         <Link to={user?"/":"/signin"} className="text-2xl font-extrabold tracking-widest">MYCAELLI SUPER STORE</Link>
         {user && <Link to="/wishlist" className="badge">Lista de desejos pesada</Link>}
 
-        {user && (
-          <button className="btn-secondary" onClick={() => preloadAllAssets()}>
-            Pré-carregar tudo
-          </button>
-        )}
-
+    
         <div className="ml-auto flex gap-2">
           {!user && loc.pathname!=="/signin" && <Link to="/signin" className="btn-secondary">Entrar</Link>}
           {!user && loc.pathname!=="/signup" && <Link to="/signup" className="btn">Criar conta</Link>}
