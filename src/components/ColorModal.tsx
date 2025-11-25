@@ -1,13 +1,44 @@
-﻿import { useState } from "react";
+// src/components/ColorModal.tsx
+import { useState } from "react";
 import ConfirmModal from "./ConfirmModal";
 
 const COLORS = [
-  { k: "red", n: "Vermelho", c: "bg-red-600" },
-  { k: "green", n: "Verde", c: "bg-green-600" },
-  { k: "blue", n: "Azul", c: "bg-blue-600" },
-  { k: "yellow", n: "Amarelo", c: "bg-yellow-500" },
-  { k: "purple", n: "Roxo", c: "bg-purple-600" },
-  { k: "cyan", n: "Ciano", c: "bg-cyan-600" },
+  {
+    k: "red",
+    n: "Vermelho",
+    c: "bg-red-600",
+    label: "Preciso Disso",           // categoria
+  },
+  {
+    k: "green",
+    n: "Verde",
+    c: "bg-green-600",
+    label: "Ideia de Presente",       // categoria
+  },
+  {
+    k: "blue",
+    n: "Azul",
+    c: "bg-blue-800",
+    label: "Sonho Distante",          // categoria
+  },
+  {
+    k: "yellow",
+    n: "Amarelo",
+    c: "bg-yellow-500",
+    label: "Quero Muito",             // categoria
+  },
+  {
+    k: "purple",
+    n: "Roxo",
+    c: "bg-purple-600",
+    label: "Para Pesquisar",          // categoria
+  },
+  {
+    k: "cyan",
+    n: "Ciano",
+    c: "bg-cyan-600",
+    label: "Adorei!",                 // categoria
+  },
 ] as const;
 
 type ColorKey = (typeof COLORS)[number]["k"];
@@ -30,6 +61,7 @@ export default function ColorModal({
   return (
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/40" />
+
       <div className="absolute inset-0 flex items-center justify-center p-4">
         <div className="card w-full max-w-md">
           <h3 className="text-xl font-extrabold mb-3">
@@ -40,13 +72,18 @@ export default function ColorModal({
             {COLORS.map((c) => (
               <button
                 key={c.k}
-                className="flex items-center gap-3 border-2 border-gray-400 rounded-xl p-3 hover:bg-gray-50"
+                className="flex items-center gap-3 border-2 border-gray-400 rounded-xl p-3 hover:bg-gray-50 text-left"
                 onClick={() => setPending(c.k)}
               >
                 <span
                   className={`w-8 h-8 rounded-lg ${c.c} border-4 border-gray-800`}
-                />
-                <div className="font-bold">{c.n}</div>
+                ></span>
+
+                <div className="flex flex-col">
+                  <span className="font-bold">{c.n}</span>
+                  <span className="text-xs opacity-70">{c.label}</span>
+                </div>
+
                 <div className="ml-auto text-xs opacity-70">
                   Adicionar nesta cor
                 </div>
@@ -62,12 +99,13 @@ export default function ColorModal({
         </div>
       </div>
 
+      {/* confirmação da cor escolhida */}
       <ConfirmModal
         open={!!pending}
         title="Confirmar cor"
         desc={
           selected
-            ? `Deseja adicionar na lista na cor ${selected.n.toLowerCase()}?`
+            ? `Deseja adicionar na categoria "${selected.label}" (cor ${selected.n})?`
             : "Deseja adicionar na lista?"
         }
         confirmText="Sim, adicionar"
