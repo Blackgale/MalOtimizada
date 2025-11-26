@@ -188,15 +188,8 @@ export default function ProductDetails() {
     }
   }
 
-  const images = useMemo(
-    () =>
-      product?.images && product.images.length
-        ? product.images
-        : product?.image
-        ? [product.image]
-        : [],
-    [product]
-  );
+  // *** AQUI é o ajuste: sempre usar a mesma imagem fixa ***
+  const images = useMemo(() => ["/celular.png"], []);
 
   const longDescription = useMemo(() => {
     if (!product) return ["", "", "", ""];
