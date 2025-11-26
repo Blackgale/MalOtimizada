@@ -1,4 +1,4 @@
-﻿// src/pages/Products.tsx
+// src/pages/Products.tsx
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
@@ -35,7 +35,8 @@ export default function Products() {
           id: p.id,
           title: p.name,
           price: p.price,
-          image: p.imageUrl,
+          // não importa muito, mas já deixo alinhado
+          image: "/celular.png",
         }));
 
         setProducts(mapped);
