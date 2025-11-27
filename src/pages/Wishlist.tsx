@@ -64,8 +64,9 @@ export default function Wishlist() {
         )}
 
         {list.map(({ wish, product }) => {
+          // *** Fallback de imagem se não existir ***
           const cover =
-            product?.image || product?.images?.[0] || "/img-placeholder.svg";
+            product?.image || product?.images?.[0] || "/celular.png";  // Caminho fixo
 
           const colorClass =
             COLOR_STYLES[wish.color] ||
