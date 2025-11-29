@@ -1,4 +1,3 @@
-// src/pages/ProductDetails.tsx
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState, FormEvent } from "react";
 
@@ -35,7 +34,6 @@ type ApiReview = {
   replies?: number;
 };
 
-// mesmas cores usadas nas listas
 const COLOR_LABELS: Record<string, string> = {
   red: "Lista vermelha",
   green: "Lista verde",
@@ -63,7 +61,7 @@ export default function ProductDetails() {
   const [error, setError] = useState<string | null>(null);
 
   const [reviews, setReviews] = useState<ApiReview[]>([]);
-  const [loadingReviews, setLoadingReviews] = useState(true);
+  const [loadingReviews, setLoadingReviews] = useState(false);
 
   const { items, add, remove } = useWishlist();
 
@@ -78,7 +76,7 @@ export default function ProductDetails() {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // buscar produto
+  // Buscar produto
   useEffect(() => {
     if (!id) return;
 
@@ -107,31 +105,7 @@ export default function ProductDetails() {
     fetchProduct();
   }, [id]);
 
-  // buscar reviews (se existir API, senão fica [])
-  useEffect(() => {
-    if (!id) return;
-
-    async function fetchReviews() {
-      try {
-        const res = await fetch(`/api/products/${id}/reviews`);
-        if (!res.ok) {
-          setReviews([]);
-          return;
-        }
-        const data: ApiReview[] = await res.json();
-        setReviews(data);
-      } catch (e) {
-        console.error(e);
-        setReviews([]);
-      } finally {
-        setLoadingReviews(false);
-      }
-    }
-
-    fetchReviews();
-  }, [id]);
-
-  // enviar avaliação (com fallback local)
+  // Enviar avaliação (com fallback local)
   async function handleSubmitReview(e: FormEvent) {
     e.preventDefault();
     if (!id) return;
@@ -147,50 +121,18 @@ export default function ProductDetails() {
       createdAt: new Date().toISOString(),
     };
 
-    try {
-      let created: ApiReview | null = null;
+    // Adiciona a review à lista de reviews locais
+    setReviews((prev) => [localReview, ...prev]);
 
-      try {
-        const res = await fetch(`/api/products/${id}/reviews`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            author: localReview.author,
-            rating: localReview.rating,
-            text: localReview.text,
-          }),
-        });
-
-        if (res.ok) {
-          created = await res.json();
-        } else {
-          console.warn("API de reviews não respondeu OK, usando fallback local");
-        }
-      } catch (err) {
-        console.warn(
-          "Falha na chamada da API de reviews, usando fallback local",
-          err
-        );
-      }
-
-      const finalReview = created ?? localReview;
-
-      setReviews((prev) => [finalReview, ...prev]);
-
-      setReviewAuthor("");
-      setReviewRating(5);
-      setReviewText("");
-    } catch (err) {
-      console.error(err);
-      setSubmitError("Não foi possível salvar seu comentário.");
-    } finally {
-      setSubmittingReview(false);
-    }
+    setReviewAuthor("");
+    setReviewRating(5);
+    setReviewText("");
+    setSubmittingReview(false);
   }
 
   // *** AQUI é o ajuste: sempre usar a mesma imagem fixa ***
   const images = useMemo(() => Array(10).fill("/celular.png"), []);
-  
+
   const longDescription = useMemo(() => {
     if (!product) return ["", "", "", ""];
     return [
@@ -215,7 +157,7 @@ export default function ProductDetails() {
     );
   }
 
-  // pode ter mais de uma entrada para o mesmo produto em listas diferentes
+  // Pode ter mais de uma entrada para o mesmo produto em listas diferentes
   const savedEntries = items.filter((i) => i.productId === product.id);
   const isSaved = savedEntries.length > 0;
   const savedColors = Array.from(
@@ -252,7 +194,7 @@ export default function ProductDetails() {
 
   const handleWishlistClick = () => {
     if (isSaved) {
-      // remove todas as entradas desse produto (todas as listas)
+      // Remove todas as entradas desse produto (todas as listas)
       remove(product.id);
     } else {
       setOpenColor(true);
@@ -392,13 +334,11 @@ export default function ProductDetails() {
         </p>
       </div>
 
-      {/* SEÇÃO REVIEWS (API + formulário) */}
+      {/* SEÇÃO REVIEWS (Formulário) */}
       <div className="card space-y-4">
         <h2 className="text-xl font-extrabold">Avaliações</h2>
 
-        {loadingReviews ? (
-          <p className="opacity-80 text-sm">Carregando avaliações...</p>
-        ) : reviews.length === 0 ? (
+        {reviews.length === 0 ? (
           <>
             <p className="opacity-80 text-sm">
               Ainda não há comentários. Seja o primeiro a deixar sua opinião:
@@ -415,9 +355,7 @@ export default function ProductDetails() {
                 <select
                   className="input"
                   value={reviewRating}
-                  onChange={(e) =>
-                    setReviewRating(Number(e.target.value))
-                  }
+                  onChange={(e) => setReviewRating(Number(e.target.value))}
                 >
                   <option value={5}>5 estrelas</option>
                   <option value={4}>4 estrelas</option>
@@ -517,7 +455,7 @@ export default function ProductDetails() {
         )}
       </div>
 
-      {/* modais */}
+      {/* Modais */}
       <ColorModal
         open={openColor}
         onClose={() => setOpenColor(false)}
@@ -527,9 +465,7 @@ export default function ProductDetails() {
         open={askConfirm}
         onClose={() => setAskConfirm(false)}
         title="Confirmar adição"
-        desc={`Deseja adicionar na lista na cor ${
-          picked || "vermelha"
-        }?`}
+        desc={`Deseja adicionar na lista na cor ${picked || "vermelha"}?`}
         confirmText="Sim, adicionar"
         cancelText="Cancelar"
         onConfirm={confirmAdd}
