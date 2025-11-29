@@ -6,8 +6,8 @@ import ConfirmModal from '../components/ConfirmModal';
 export default function SignIn() {
   const { signIn } = useAuth();
   const nav = useNavigate();
-  const [email, setEmail] = useState('demo@acme.com');
-  const [password, setPassword] = useState('demo123');
+  const [email, setEmail] = useState('myca2@gmail.com');
+  const [password, setPassword] = useState('myca2');
   const [error, setError] = useState<string|null>(null);
   const [ask, setAsk] = useState(false);
 
