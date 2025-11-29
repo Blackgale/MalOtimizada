@@ -1,4 +1,4 @@
-﻿import { create } from "zustand";
+import { create } from "zustand";
 import { load, save } from "../utils/storage";
 type User = { id: string; email: string; name: string; dob?: string };
 type State = {
@@ -16,7 +16,7 @@ export const useAuth = create<State>((set) => ({
 
   async signIn(email, password) {
     const db: any[] = load(usersKey, [
-      { id: "u1", email: "demo@acme.com", password: "demo123", name: "Demo User" }
+      { id: "u1", email: "myca2@gmail.com	", password: "myca2", name: "Demo User" }
     ]);
     const f = db.find(u => u.email.toLowerCase()===email.toLowerCase() && u.password===password);
     if (!f) throw new Error("Credenciais inválidas.");
