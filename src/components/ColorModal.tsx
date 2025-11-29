@@ -7,37 +7,37 @@ const COLORS = [
     k: "red",
     n: "Vermelho",
     c: "bg-red-600",
-    label: "Preciso Disso",           // categoria
+    label: "Comprar agora",
   },
   {
     k: "green",
     n: "Verde",
     c: "bg-green-600",
-    label: "Ideia de Presente",       // categoria
+    label: "Economizar pra comprar",
   },
   {
     k: "blue",
     n: "Azul",
     c: "bg-blue-800",
-    label: "Sonho Distante",          // categoria
+    label: "Comprar em breve",
   },
   {
     k: "yellow",
     n: "Amarelo",
     c: "bg-yellow-500",
-    label: "Quero Muito",             // categoria
+    label: "Procurar parecidos",
   },
   {
     k: "purple",
     n: "Roxo",
     c: "bg-purple-600",
-    label: "Para Pesquisar",          // categoria
+    label: "Ver avaliações",
   },
   {
     k: "cyan",
     n: "Ciano",
     c: "bg-cyan-600",
-    label: "Adorei!",                 // categoria
+    label: "Ver em outro lugar",
   },
 ] as const;
 
@@ -65,7 +65,7 @@ export default function ColorModal({
       <div className="absolute inset-0 flex items-center justify-center p-4">
         <div className="card w-full max-w-md">
           <h3 className="text-xl font-extrabold mb-3">
-            Escolha uma cor para favoritar
+            Selecione uma cor
           </h3>
 
           <div className="grid grid-cols-1 gap-2">
@@ -99,7 +99,6 @@ export default function ColorModal({
         </div>
       </div>
 
-      {/* confirmação da cor escolhida */}
       <ConfirmModal
         open={!!pending}
         title="Confirmar cor"
